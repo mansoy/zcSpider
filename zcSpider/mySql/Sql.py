@@ -159,11 +159,57 @@ class Sql:
             return False
 
     @classmethod
+    def addSizeOddsItem(cls, item):
+        try:
+            sql = 'INSERT INTO sizeodds(`mid`, `lyid`, `immodds1`, `immdisc`, `immodds2`, `immdate`, `immstatus`, ' \
+                  '`initodds1`, `initdisc`, `initodds2`, `initdate`, `myid`, `dtdate`) VALUES(%(mid)s, %(lyid)s, %(immodds1)s, ' \
+                  '%(immdisc)s, %(immodds2)s, %(immdate)s, %(immstatus)s, %(initodds1)s, %(initdisc)s, ' \
+                  '%(initodds2)s, %(initdate)s, %(myid)s, %(dtdate)s)'
+            values = {
+                'mid': item['mid'],
+                'lyid': item['mlyId'],
+                'immodds1': item['mImmOdds1'],
+                'immdisc': item['mImmDisc'],
+                'immodds2': item['mImmOdds2'],
+                'immdate': item['mImmDate'],
+                'immstatus': item['mImmStatus'],
+                'initodds1': item['mInitOdds1'],
+                'initdisc': item['mInitDisc'],
+                'initodds2': item['mInitOdds2'],
+                'initdate': item['mInitDate'],
+                'myid': item['mmyId'],
+                'dtdate': item['mDtDate']
+            }
+            cur.execute(sql, values)
+            cnx.commit()
+            return True
+        except Exception as e:
+            print(e)
+            return False
+
+    @classmethod
     def addYaDetailItem(cls, item):
         try:
             sql = 'INSERT INTO yaoddsdetail(`yoid`, `disc`, `odds1`, `odds2`) VALUES(%(yoid)s, %(disc)s, %(odds1)s, %(odds2)s)'
             values = {
                 'yoid': item['myoid'],
+                'disc': item['mDisc'],
+                'odds1': item['mOdds1'],
+                'odds2': item['mOdds2']
+            }
+            cur.execute(sql, values)
+            cnx.commit()
+            return True
+        except Exception as e:
+            print(e)
+            return False
+
+    @classmethod
+    def addSizeDetailItem(cls, item):
+        try:
+            sql = 'INSERT INTO sizeoddsdetail(`soid`, `disc`, `odds1`, `odds2`) VALUES(%(soid)s, %(disc)s, %(odds1)s, %(odds2)s)'
+            values = {
+                'soid': item['msoid'],
                 'disc': item['mDisc'],
                 'odds1': item['mOdds1'],
                 'odds2': item['mOdds2']
@@ -206,10 +252,40 @@ class Sql:
             return 0
 
     @classmethod
+    def getSizeOddsId(cls, mid, lyid):
+        sql = 'SELECT id FROM sizeodds WHERE mid=%(mid)s and lyid=%(lyid)s'
+        value = {
+            'mid': mid,
+            'lyid': lyid
+        }
+
+        cur.execute(sql, value)
+        datas = cur.fetchall()
+        if len(datas) > 0:
+            return datas[0][0]
+        else:
+            return 0
+
+    @classmethod
     def getYaDetailId(cls, myoid, mdisc):
         sql = 'SELECT id FROM yaoddsdetail WHERE yoid=%(yoid)s and disc=%(disc)s'
         value = {
             'yoid': myoid,
+            'disc': mdisc
+        }
+
+        cur.execute(sql, value)
+        datas = cur.fetchall()
+        if len(datas) > 0:
+            return datas[0][0]
+        else:
+            return 0
+
+    @classmethod
+    def getSizeDetailId(cls, msoid, mdisc):
+        sql = 'SELECT id FROM sizeoddsdetail WHERE soid=%(soid)s and disc=%(disc)s'
+        value = {
+            'soid': msoid,
             'disc': mdisc
         }
 

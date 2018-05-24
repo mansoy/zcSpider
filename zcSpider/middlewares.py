@@ -7,7 +7,7 @@
 
 from scrapy import signals
 import random
-from scrapy.contrib.downloadermiddleware.useragent import UserAgentMiddleware
+from scrapy.downloadermiddlewares.useragent import UserAgentMiddleware
 
 
 class ZcspiderSpiderMiddleware(object):

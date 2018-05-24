@@ -64,3 +64,9 @@ if len(vjson) > 1:
     for key, data in enumerate(vjson):
         if key == 0: continue
         print('{0} {1} {2}'.format(data[0], data[1], data[2]))
+
+
+print(arrow.now().timestamp)
+print(arrow.now().float_timestamp)
+print(int(arrow.now().float_timestamp * 1000))
+

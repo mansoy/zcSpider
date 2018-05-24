@@ -1,8 +1,10 @@
-
+import logging
 from zcSpider.items import MatchDataItem
 from zcSpider.items import OuOddsItem
 from zcSpider.items import YaOddsItem
 from zcSpider.items import YaOddsDetailItem
+from zcSpider.items import SizeOddsItem
+from zcSpider.items import SizeOddsDetailItem
 from .Sql import Sql
 
 class MatchDataPipeline(object):
@@ -36,7 +38,7 @@ class MatchDataPipeline(object):
                 Sql.addMatchItem(item)
 
         except Exception as e:
-            print('MatchDataPipeline Error: {}'.format(e))
+            logging.error('MatchDataPipeline Error: {}'.format(e))
 
 
 
@@ -58,8 +60,7 @@ class MatchDataPipeline(object):
                         Sql.addOuOddsItem(item)
 
         except Exception as e:
-            print('OuOddsDataPipeline Error: {}'.format(e))
-
+            logging.error('OuOddsDataPipeline Error: {}'.format(e))
 
     def process_yaodds_item(self, item):
         try:
@@ -76,7 +77,7 @@ class MatchDataPipeline(object):
                 if (ooid == 0) and (mlyid > 0):
                     Sql.addYaOddsItem(item)
         except Exception as e:
-            print('YaOddsDataPipeline Error: {}'.format(e))
+            logging.error('YaOddsDataPipeline Error: {}'.format(e))
 
     def process_yaoddsdetail_item(self, item):
         try:
@@ -90,7 +91,38 @@ class MatchDataPipeline(object):
                 item['myoid'] = myoid
                 Sql.addYaDetailItem(item)
         except Exception as e:
-            print('YaOddsDetailDataPipeline Error: {}'.format(e))
+            logging.error('YaOddsDetailDataPipeline Error: {}'.format(e))
+
+    def process_sizeodds_item(self, item):
+        try:
+            #判断当前比赛是否已经记录
+            mbId = Sql.getMatchId(item['mid'])
+            if (mbId > 0):
+                # 获取博彩公司编号
+                mlyid = Sql.select_name('b_lottery', item['mlyName'])
+                if (mlyid == 0):
+                    if Sql.addLotteryItem(item['mlyName'], '', ''):
+                        mlyid = Sql.select_name('b_lottery', item['mlyName'])
+                item['mlyId'] = mlyid
+                ooid = Sql.getSizeOddsId(item['mid'], mlyid)
+                if (ooid == 0) and (mlyid > 0):
+                    Sql.addSizeOddsItem(item)
+        except Exception as e:
+            logging.error('SizeOddsDataPipeline Error: {}'.format(e))
+
+    def process_sizeoddsdetail_item(self, item):
+        try:
+            # 获取博彩公司编号
+            mlyid = Sql.select_name('b_lottery', item['mlyName'])
+            # 获取亚赔ID
+            myoid = Sql.getSizeOddsId(item['mid'], mlyid)
+            # 判断明细是否已经存在
+            mdid = Sql.getSizeDetailId(myoid, item['mDisc'])
+            if (mdid == 0) and (myoid > 0):
+                item['msoid'] = myoid
+                Sql.addSizeDetailItem(item)
+        except Exception as e:
+            logging.error('SizeOddsDetailDataPipeline Error: {}'.format(e))
 
     def process_item(self, item, spider):
         # print(item)
@@ -102,3 +134,7 @@ class MatchDataPipeline(object):
             self.process_yaodds_item(item)
         elif isinstance(item, YaOddsDetailItem):
             self.process_yaoddsdetail_item(item)
+        elif isinstance(item, SizeOddsItem):
+            self.process_sizeodds_item(item)
+        elif isinstance(item, SizeOddsDetailItem):
+            self.process_sizeoddsdetail_item(item)

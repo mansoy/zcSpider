@@ -21,7 +21,7 @@ MYSQL_PORT = '3306'
 MYSQL_DB = 'zcdata'
 
 LOG_FILE = 'log.txt'
-LOG_LEVEL = 'ERROR'
+LOG_LEVEL = 'WARNING'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent

@@ -12,6 +12,8 @@ from zcSpider.items import MatchDataItem
 from zcSpider.items import OuOddsItem
 from zcSpider.items import YaOddsItem
 from zcSpider.items import YaOddsDetailItem
+from zcSpider.items import SizeOddsItem
+from zcSpider.items import SizeOddsDetailItem
 
 
 headers = {
@@ -96,17 +98,19 @@ class zcSpider(scrapy.Spider):
 
                     # 欧赔页面url
                     url = 'http://odds.500.com/fenxi/ouzhi-' + item['mid'] + '.shtml'
-                    yield Request(url=url, callback=self.getOpData, meta={'mid': item['mid']})
+                    yield Request(url=url, callback=self.getOpData, meta={'mid': item['mid'], 'date': response.meta['date']})
 
                     # 亚赔页面url
                     url = 'http://odds.500.com/fenxi/yazhi-' + item['mid'] + '.shtml'
-                    yield Request(url=url, callback=self.getYpData,
-                                  meta={'mid': item['mid'], 'year': response.meta['year'], 'date': response.meta['date']})
-                    # print(item)
+                    yield Request(url=url, callback=self.getYpData, meta={'mid': item['mid'], 'year': response.meta['year'], 'date': response.meta['date']})
+
+                    # 大小指数url
+                    url = 'http://odds.500.com/fenxi/daxiao-{0}.shtml'.format(item['mid'])
+                    yield Request(url=url, callback=self.getSizeData, meta={'mid': item['mid'], 'year': response.meta['year'], 'date': response.meta['date']})
                 except Exception as e:
-                    self.log('[Parse Error][{0}]HomePage Error[{1}]'.format(response.meta['date'], e))
+                    self.logger.error('[Parse Error][{0}]HomePage Error[{1}]'.format(response.meta['date'], e))
         else:
-            self.log('[Status Error][{0}]HomePage Status[{1}]'.format(response.meta['date'], response.status))
+            self.logger.error('[Status Error][{0}]HomePage Status[{1}]'.format(response.meta['date'], response.status))
 
 
     # 获取欧赔数据
@@ -181,9 +185,9 @@ class zcSpider(scrapy.Spider):
 
                     yield item
                 except Exception as e:
-                    self.log('[Parse Error][{0} - {1}]Parse OuOdds Error{1}'.format(spdate, mid, e))
+                    self.logger.error('[Parse Error][{0} - {1}]Parse OuOdds Error{1}'.format(spdate, mid, e))
         else:
-            self.log('[Status Error][{0} - {1}]Parse OuOdds Status[{1}]'.format(spdate, mid, response.status))
+            self.logger.error('[Status Error][{0} - {1}]Parse OuOdds Status[{1}]'.format(spdate, mid, response.status))
 
     # 获取亚赔数据
     def getYpData(self, response):
@@ -201,11 +205,9 @@ class zcSpider(scrapy.Spider):
                     #print('getYpData[{0}]pageCount[{1}]Index[{2}]'.format(mid, pageCount, i))
                     yield Request(url=url, callback=self.parseYpData, meta={'mid': mid, 'year': year, 'date': spdate})
             else:
-                self.log('[Status Error][{0} - {1}]YaOdds Status[{1}]'.format(spdate, mid, response.status))
+                self.logger.error('[Status Error][{0} - {1}]YaOdds Status[{1}]'.format(spdate, mid, response.status))
         except Exception as e:
-            print('{0}解析博彩公司数量时发生错误{1}'.format(mid, e))
-            self.log('[Parse Error][{0} - {1}]GetOuOdds Error{1}'.format(spdate, mid, e))
-
+            self.logger.error('[Parse Error][{0} - {1}]GetYaOdds Error{1}'.format(spdate, mid, e))
 
     # 解析亚盘数据
     def parseYpData(self, response):
@@ -256,13 +258,13 @@ class zcSpider(scrapy.Spider):
                     yield item
 
                     # 解析明细数据
-                    url = 'http://odds.500.com/fenxi1/inc/ajax.php?t=yazhi&p=1&r=1&fixtureid={0}&companyid={1}&updatetime={2}'.format(mid, item['mmyId'], item['mDtDate'])
+                    sTimpstamp = int(arrow.now().float_timestamp * 1000)
+                    url = 'http://odds.500.com/fenxi1/inc/ajax.php?_={0}&t=yazhi&p=1&r=1&fixtureid={1}&companyid={2}&updatetime={3}'.format(sTimpstamp, mid, item['mmyId'],item['mDtDate'])
                     yield Request(url=url, callback=self.parseYpDetailData, meta={'mid': mid, 'lyName': item['mlyName'], 'date': spdate})
                 except Exception as e:
                     self.log('[Parse Error][{0} - {1}]Parse YaOdds Error{1}'.format(spdate, mid, e))
         else:
             self.log('[Status Error][{0} - {1}]Parse YaOdds Status[{1}]'.format(spdate, mid, response.status))
-
 
     def parseYpDetailData(self, response):
         mid = response.meta['mid']
@@ -284,3 +286,101 @@ class zcSpider(scrapy.Spider):
                 self.log('[Status Error][{0} - {1}]Parse YaOdds Details Status[{1}]'.format(spdate, mid, response.status))
         except Exception as e:
             self.log('[Parse Error][{0} - {1}]Parse YaOdds Details Error{1}'.format(spdate, mid, e))
+
+    # 获取大小指数
+    def getSizeData(self, response):
+        mid = response.meta['mid']
+        year = response.meta['year']
+        spdate = response.meta['date']
+        try:
+            if response.status == 200:
+                tmpNode = Selector(response=response).xpath('//div[@class="table_btm"]//span[@id="nowcnum"]/text()').extract()
+                lyCount = int(tmpNode[0])
+                pageCount = lyCount // 30 + (1 if lyCount % 30 > 0 else 0)
+                for i in range(pageCount):
+                    url = 'http://odds.500.com/fenxi1/daxiao.php?id={0}&ctype=1&start={1}&r=1&' \
+                          'style=0&guojia=0'.format(mid, i * 30)
+                    yield Request(url=url, callback=self.parseSizeData, meta={'mid': mid, 'year': year, 'date': spdate})
+            else:
+                self.logger.error('[Status Error][{0} - {1}]SizeOdds Status[{1}]'.format(spdate, mid, response.status))
+        except Exception as e:
+            self.logger.error('[Parse Error][{0} - {1}]GetSizeOdds Error{1}'.format(spdate, mid, e))
+
+    # 解析大小指数
+    def parseSizeData(self, response):
+        datas = Selector(response).xpath('//tr[@xls="row"]').extract()
+        mid = response.meta['mid']
+        year = response.meta['year']
+        spdate = response.meta['date']
+        if response.status == 200:
+            for data in datas:
+                try:
+                    item = SizeOddsItem()
+                    st = Selector(text=data)
+                    item['mid'] = mid
+
+                    # 提取博彩公司名称
+                    lmName = st.xpath('//span[@class="quancheng"]/text()').extract()[0]
+                    item['mlyName'] = lmName.replace(' ', '')
+
+                    oddss = st.xpath('//tr[@xls="row"]//table[@class="pl_table_data"]').extract()
+
+                    # 提取即时盘口数据
+                    tds = Selector(text=oddss[0]).xpath('//td/text()').extract()
+                    item['mImmOdds1'] = float(tds[0].replace('↑', '').replace('↓', ''))
+                    item['mImmDisc'] = tds[1]
+                    item['mImmOdds2'] = float(tds[2].replace('↑', '').replace('↓', ''))
+                    item['mImmStatus'] = 1
+
+                    tmpNode = st.xpath('//td[@class="ying"]/text()').extract()
+                    if len(tmpNode) > 0:
+                        if tmpNode[0] == tds[2]:
+                            item['mImmStatus'] = 2
+
+                    # 提取初始盘口数据
+                    tds = Selector(text=oddss[1]).xpath('//td/text()').extract()
+                    item['mInitOdds1'] = float(tds[0].replace('↑', '').replace('↓', ''))
+                    item['mInitDisc'] = tds[1]
+                    item['mInitOdds2'] = float(tds[2].replace('↑', '').replace('↓', ''))
+
+                    oddsTimes = st.xpath('//time/text()').extract()
+                    # 即时盘口变化时间
+                    item['mImmDate'] = '{0}-{1}'.format(year, oddsTimes[0])
+                    # 初始盘口变化时间
+                    item['mInitDate'] = '{0}-{1}'.format(year, oddsTimes[0])
+
+                    item['mmyId'] = st.xpath('//tr/@id').extract()[0]
+                    item['mDtDate'] = st.xpath('//tr/@dt').extract()[0]
+
+                    yield item
+
+                    # 解析明细数据
+                    sTimpstamp = int(arrow.now().float_timestamp * 1000)
+                    url = 'http://odds.500.com/fenxi1/inc/ajax.php?_={0}&t=daxiao&p=1&r=1&fixtureid={1}&companyid={2}&updatetime={3}'.format(sTimpstamp, mid, item['mmyId'], item['mDtDate'])
+                    yield Request(url=url, callback=self.parseSizeDetailData, meta={'mid': mid, 'lyName': item['mlyName'], 'date': spdate})
+                except Exception as e:
+                    self.log('[Parse Error][{0} - {1}]Parse YaOdds Error{1}'.format(spdate, mid, e))
+        else:
+            self.log('[Status Error][{0} - {1}]Parse YaOdds Status[{1}]'.format(spdate, mid, response.status))
+
+    # 解析大小指数明细数据
+    def parseSizeDetailData(self, response):
+        mid = response.meta['mid']
+        lyName = response.meta['lyName']
+        spdate = response.meta['date']
+        try:
+            if response.status == 200:
+                datas = json.loads(response.body)
+                for key, data in enumerate(datas):
+                    if key == 0: continue
+                    item = SizeOddsDetailItem()
+                    item['mid'] = mid
+                    item['mlyName'] = lyName
+                    item['mOdds1'] = float(data[0])
+                    item['mDisc'] = data[1]
+                    item['mOdds2'] = float(data[2])
+                    yield item
+            else:
+                self.log('[Status Error][{0} - {1}]Parse SizeOdds Details Status[{1}]'.format(spdate, mid, response.status))
+        except Exception as e:
+            self.log('[Parse Error][{0} - {1}]Parse SizeOdds Details Error{1}'.format(spdate, mid, e))

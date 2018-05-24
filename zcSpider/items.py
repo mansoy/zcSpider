@@ -112,3 +112,38 @@ class YaOddsItem(scrapy.Item):
     # 明细数据(500彩票中的更多)
     mDetailData = scrapy.Field()
 
+
+class SizeOddsDetailItem(scrapy.Item):
+    mid = scrapy.Field()
+    mlyName = scrapy.Field()
+    #mlyId = scrapy.Field()
+    msoid = scrapy.Field()
+    mOdds1 = scrapy.Field()
+    mDisc = scrapy.Field()
+    mOdds2 = scrapy.Field()
+
+class SizeOddsItem(scrapy.Item):
+    # 比赛场次编号
+    mid = scrapy.Field()
+    # 一场比赛中的一个赔率编号(对应赔率公司)
+    mmyId = scrapy.Field()
+    #
+    mDtDate = scrapy.Field()
+    # 博彩公司名称
+    mlyName = scrapy.Field()
+    # 博彩公司编号
+    mlyId = scrapy.Field()
+    # 即时盘口
+    mImmOdds1 = scrapy.Field()
+    mImmDisc = scrapy.Field()
+    mImmOdds2 = scrapy.Field()
+    mImmDate = scrapy.Field()
+    mImmStatus = scrapy.Field()
+    # 初始盘口
+    mInitOdds1 = scrapy.Field()
+    mInitDisc = scrapy.Field()
+    mInitOdds2 = scrapy.Field()
+    mInitDate = scrapy.Field()
+    # 明细数据(500彩票中的更多)
+    mDetailData = scrapy.Field()
+
