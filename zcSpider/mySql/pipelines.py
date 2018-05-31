@@ -8,7 +8,6 @@ from zcSpider.items import SizeOddsDetailItem
 from .Sql import Sql
 
 class MatchDataPipeline(object):
-
     def process_match_item(self, item):
         try:
             #获取主队编号

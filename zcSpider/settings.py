@@ -20,8 +20,8 @@ MYSQL_PASSWORD = 'isoying123'
 MYSQL_PORT = '3306'
 MYSQL_DB = 'zcdata'
 
-LOG_FILE = 'log.txt'
-LOG_LEVEL = 'WARNING'
+# LOG_FILE = 'log.txt'
+# LOG_LEVEL = 'WARNING'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
@@ -36,7 +36,7 @@ CONCURRENT_REQUESTS = 32
 # Configure a delay for requests for the same website (default: 0)
 # See https://doc.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-#DOWNLOAD_DELAY = 3
+DOWNLOAD_DELAY = 0.2
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN = 16
 #CONCURRENT_REQUESTS_PER_IP = 16
@@ -62,8 +62,10 @@ COOKIES_ENABLED = False
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
-    'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware': None, # 必需 ,禁用默认的middleware
-    'zcSpider.middlewares.MsAgentMiddleware': 400,
+    'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware': None,  # 必需 ,禁用默认的middleware
+    'scrapy.contrib.downloadermiddleware.httpproxy.HttpProxyMiddleware': 300,
+    'zcSpider.middlewares.MsAgentMiddleware': 100,
+    'zcSpider.middlewares.MsHttoProxyMiddleware': 110,
 }
 
 # Enable or disable extensions
@@ -75,16 +77,17 @@ DOWNLOADER_MIDDLEWARES = {
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    'zcSpider.mySql.pipelines.MatchDataPipeline': 100,
+    #'zcSpider.mySql.pipelines.MatchDataPipeline': 100,
+    'zcSpider.mySql.MySqlPipeline.MySqlPipeline': 100,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://doc.scrapy.org/en/latest/topics/autothrottle.html
-AUTOTHROTTLE_ENABLED = True
+#AUTOTHROTTLE_ENABLED = True
 # The initial download delay
-AUTOTHROTTLE_START_DELAY = 1
+#AUTOTHROTTLE_START_DELAY = 1
 # The maximum download delay to be set in case of high latencies
-AUTOTHROTTLE_MAX_DELAY = 60
+#AUTOTHROTTLE_MAX_DELAY = 60
 # The average number of requests Scrapy should be sending in parallel to
 # each remote server
 #AUTOTHROTTLE_TARGET_CONCURRENCY = 1.0
