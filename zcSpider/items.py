@@ -12,9 +12,9 @@ class MatchDataItem(scrapy.Item):
     # 比赛场次编号
     mid = scrapy.Field()
     # 联赛名称
-    mlmName = scrapy.Field()
+    mlsName = scrapy.Field()
     # 联赛编号
-    mlmNameId = scrapy.Field()
+    mlsId = scrapy.Field()
     # 主队名称
     mmTeam = scrapy.Field()
     # 主队编号

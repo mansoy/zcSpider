@@ -68,17 +68,17 @@ class MySqlPipeline(object):
                     mdid = MySql.select_name(cursor, 'b_team', item['mdTeam'])
 
             #获取联赛编号
-            mlmid = MySql.select_name(cursor, 'b_lmatch', item['mlmName'])
-            if (mlmid == 0):
-                if MySql.addlmMatchItem(cursor, item['mlmName'], '', ''):
-                    mlmid = MySql.select_name(cursor, 'b_lmatch', item['mlmName'])
+            mlsid = MySql.select_name(cursor, 'b_lmatch', item['mlsName'])
+            if (mlsid == 0):
+                if MySql.addlmMatchItem(cursor, item['mlsName'], '', ''):
+                    mlsid = MySql.select_name(cursor, 'b_lmatch', item['mlsName'])
 
             #判断当前比赛是否已经记录
             mbId = MySql.getMatchId(cursor, item['mid'])
             if (mbId == 0):
                 item['mmTeamId'] = mmid
                 item['mdTeamId'] = mdid
-                item['mlmNameId'] = mlmid
+                item['mlsId'] = mlsid
                 if MySql.addMatchItem(cursor, item):
                     logging.warning('AddData[MatchDate]Mid[{0}]'.format(item['mid']))
         except Exception as e:

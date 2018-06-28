@@ -23,17 +23,17 @@ class MatchDataPipeline(object):
                     mdid = Sql.select_name('b_team', item['mdTeam'])
 
             #获取联赛编号
-            mlmid = Sql.select_name('b_lmatch', item['mlmName'])
-            if (mlmid == 0):
-                if Sql.addlmMatchItem(item['mlmName'], '', ''):
-                    mlmid = Sql.select_name('b_lmatch', item['mlmName'])
+            mlsid = Sql.select_name('b_lmatch', item['mlsName'])
+            if (mlsid == 0):
+                if Sql.addlmMatchItem(item['mlsName'], '', ''):
+                    mlsid = Sql.select_name('b_lmatch', item['mlsName'])
 
             #判断当前比赛是否已经记录
             mbId = Sql.getMatchId(item['mid'])
             if (mbId == 0):
                 item['mmTeamId'] = mmid
                 item['mdTeamId'] = mdid
-                item['mlmNameId'] = mlmid
+                item['mlsId'] = mlsid
                 Sql.addMatchItem(item)
 
         except Exception as e:

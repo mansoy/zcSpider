@@ -4,7 +4,7 @@ class MySql:
         try:
             sql = 'INSERT INTO b_team(`name`, `fullname`, `remark`) VALUES(%(name)s, %(fullname)s, %(remark)s)'
             values = {
-                'name': name,
+                'name': name.replace(' ', ''),
                 'fullname': fullname,
                 'remark': remark
             }
@@ -19,7 +19,7 @@ class MySql:
         try:
             sql = 'INSERT INTO b_lmatch(`name`, `fullname`, `remark`) VALUES(%(name)s, %(fullname)s, %(remark)s)'
             values = {
-                'name': name,
+                'name': name.replace(' ', ''),
                 'fullname': fullname,
                 'remark': remark
             }
@@ -33,7 +33,7 @@ class MySql:
         try:
             sql = 'INSERT INTO b_lottery(`name`, `fullname`, `remark`) VALUES(%(name)s, %(fullname)s, %(remark)s)'
             values = {
-                'name': name,
+                'name': name.replace(' ', ''),
                 'fullname': fullname,
                 'remark': remark
             }
@@ -46,12 +46,12 @@ class MySql:
     @classmethod
     def addMatchItem(cls, cur, item):
         try:
-            sql = 'INSERT INTO matchdata(`mid`, `mlmid`, `mteamid`, `dteamid`, `isend`, `rq`, `jq`, `sq`, `status`, `rstatus`, ' \
-                  '`week`, `mdate`, `mtime`, `sdate`) VALUES(%(mid)s, %(mlmid)s, %(mteamid)s, %(dteamid)s, %(isend)s, %(rq)s, %(jq)s' \
+            sql = 'INSERT INTO matchdata(`mid`, `mlsid`, `mteamid`, `dteamid`, `isend`, `rq`, `jq`, `sq`, `status`, `rstatus`, ' \
+                  '`week`, `mdate`, `mtime`, `sdate`) VALUES(%(mid)s, %(mlsid)s, %(mteamid)s, %(dteamid)s, %(isend)s, %(rq)s, %(jq)s' \
                   ', %(sq)s, %(status)s, %(rstatus)s, %(week)s, %(mdate)s, %(mtime)s, %(sdate)s)'
             values = {
                 'mid': item['mid'],
-                'mlmid': item['mlmNameId'],
+                'mlsid': item['mlsId'],
                 'mteamid': item['mmTeamId'],
                 'dteamid': item['mdTeamId'],
                 'isend': item['mIsend'],

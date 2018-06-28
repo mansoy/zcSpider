@@ -15,18 +15,6 @@ from zcSpider.items import SizeOddsItem
 from zcSpider.items import SizeOddsDetailItem
 
 
-headers = {
-
-    'Accept': 'text/html, application/xhtml+xml, image/jxr, */*',
-    'Accept-Encoding': 'gzip, deflate',
-    'Accept-Language': 'zh-CN',
-    'Connection': 'Keep-Alive',
-    #'Cookie': 'sdc_session=1526983196230; Hm_lpvt_4f816d475bb0b9ed640ae412d6b42cab=1526983410; motion_id=1526983280925_0.27740046278176144; ck_RegUrl=trade.500.com; _jzqc=1; __utmc=63332592; __utmz=63332592.1526983258.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); ck_RegFromUrl=http%3A//trade.500.com/jczq/%3Fdate%3D2018-01-20; sdc_userflag=1526983196230::1526983410123::4; _jzqb=1.3.10.1526983200.1; __utma=63332592.1440787636.1526983258.1526983258.1526983258.1; Hm_lvt_4f816d475bb0b9ed640ae412d6b42cab=1526983196; _jzqckmp=1; __utmb=63332592.4.10.1526983258; _jzqa=1.783733940908145800.1526983200.1526983200.1526983200.1; CLICKSTRN_ID=123.139.29.83-1526983193.265753::9875C9DED126466E2ABB227B342F9969; __utmt=1; _jzqx=1.1526983200.1526983200.1.jzqsr=trade%2E500%2Ecom|jzqct=/jczq/.-; _qzjc=1; Hm_lpvt_40a8e2d10b0aab8fc5816be65a102f0c=1526983283; WT_FPC=id=undefined:lv=1526983410122:ss=1526983201635; _qzjb=1.1526983200555.3.0.0.0; Hm_lvt_40a8e2d10b0aab8fc5816be65a102f0c=1526983202,1526983283; _qzjto=3.1.0; _qzja=1.65817644.1526983200555.1526983200555.1526983200555.1526983282971.1526983410237.0.0.0.3.1; bdshare_firstime=1526983200078',
-    'Host': 'odds.500.com',
-    'User-Agent': 'Mozilla/5.0 (MSIE 9.0; qdesk 2.5.1277.202; Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko'
-}
-
-
 class zcSpider(scrapy.Spider):
     name = 'zcSpider'
     allowed_domains = ['500.com']
@@ -52,7 +40,7 @@ class zcSpider(scrapy.Spider):
                 st = Selector(text=data)
                 item = MatchDataItem()
                 item['mid'] = st.xpath('//tr/@fid').extract()[0]
-                item['mlmName'] = st.xpath('//tr/@lg').extract()[0]
+                item['mlsName'] = st.xpath('//tr/@lg').extract()[0].replace(' ', '').replace('　', '')
                 item['mmTeam'] = st.xpath('//tr/@homesxname').extract()[0].replace(' ', '')
                 item['mdTeam'] = st.xpath('//tr/@awaysxname').extract()[0].replace(' ', '')
                 item['mIsend'] = st.xpath('//tr/@isend').extract()[0]
@@ -75,7 +63,6 @@ class zcSpider(scrapy.Spider):
                 item['mRWinStatus'] = -1
 
                 # 提取让球数
-
                 try:
                     tmpNode = st.xpath('//span[@class="eng green"] or @class="eng red"]/text()').extract()
                     item['mQr'] = int(tmpNode[0])
@@ -138,14 +125,13 @@ class zcSpider(scrapy.Spider):
                 st = Selector(text=data)
                 # 提取博彩公司名称
                 lmName = st.xpath('//td[@class="tb_plgs"]/@title').extract()[0]
-                lmName.replace(' ', '')
 
                 item['mid'] = mid
-                item['mlyName'] = lmName
+                item['mlyName'] = lmName.replace(' ', '')
                 # 提取数据(20个数据一次按顺序对应相关数据)
                 numdatas = st.xpath('////table[@class="pl_table_data"]//tr/td/text()').extract()
 
-                # 即时赔率
+                # 即时欧赔
                 item['mOdds11'] = float(numdatas[0].strip())
                 item['mOdds12'] = float(numdatas[1].strip())
                 item['mOdds13'] = float(numdatas[2].strip())
@@ -216,6 +202,8 @@ class zcSpider(scrapy.Spider):
 
                 # 提取即时盘口数据
                 tds = Selector(text=oddss[0]).xpath('//td/text()').extract()
+                sOdds = tds[0]
+
                 item['mImmOdds1'] = float(tds[0].replace('↑', '').replace('↓', ''))
                 item['mImmDisc'] = tds[1]
                 item['mImmOdds2'] = float(tds[2].replace('↑', '').replace('↓', ''))
@@ -246,7 +234,7 @@ class zcSpider(scrapy.Spider):
                 # 解析明细数据
                 sTimpstamp = int(arrow.now().float_timestamp * 1000)
                 url = 'http://odds.500.com/fenxi1/inc/ajax.php?_={0}&t=yazhi&p=1&r=1&fixtureid={1}&companyid={2}&updatetime={3}'.format(sTimpstamp, mid, item['mmyId'],item['mDtDate'])
-                yield Request(url=url, callback=self.parseYpDetailData, meta={'mid': mid, 'lyName': item['mlyName'], 'date': spdate})
+                # yield Request(url=url, callback=self.parseYpDetailData, meta={'mid': mid, 'lyName': item['mlyName'], 'date': spdate})
 
                 # self.logger.error('[Parse Ok][{0}]Yp Data[{1} - {2}]'.format(response.meta['date'], mid, lmName))
             except Exception as e:
@@ -336,7 +324,7 @@ class zcSpider(scrapy.Spider):
                 # 解析明细数据
                 sTimpstamp = int(arrow.now().float_timestamp * 1000)
                 url = 'http://odds.500.com/fenxi1/inc/ajax.php?_={0}&t=daxiao&p=1&r=1&fixtureid={1}&companyid={2}&updatetime={3}'.format(sTimpstamp, mid, item['mmyId'], item['mDtDate'])
-                yield Request(url=url, callback=self.parseSizeDetailData, meta={'mid': mid, 'lyName': item['mlyName'], 'date': spdate})
+                # yield Request(url=url, callback=self.parseSizeDetailData, meta={'mid': mid, 'lyName': item['mlyName'], 'date': spdate})
 
                 # self.logger.error('[Parse Ok][{0}]Sp Data[{1} - {2}]'.format(response.meta['date'], mid, lmName))
             except Exception as e:
